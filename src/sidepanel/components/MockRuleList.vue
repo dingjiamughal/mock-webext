@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import draggable from 'vuedraggable';
 import MockRuleCard from './MockRuleCard.vue';
 
 interface MockRule {
@@ -24,6 +25,7 @@ interface Emits {
     (e: 'delete-rule', ruleId: string): void;
     (e: 'toggle-rule-collapse', ruleId: string): void;
     (e: 'toggle-rule-enabled', ruleId: string, enabled: boolean): void;
+    (e: 'reorder-rules', newOrder: MockRule[]): void;
 }
 
 const props = defineProps<Props>();
@@ -48,22 +50,54 @@ function toggleRuleCollapse(ruleId: string) {
 function toggleRuleEnabled(ruleId: string, enabled: boolean) {
     emit('toggle-rule-enabled', ruleId, enabled);
 }
+
+// 处理拖拽排序
+function handleReorder(newOrder: MockRule[]) {
+    emit('reorder-rules', newOrder);
+}
 </script>
 
 <template>
     <div class="rule-list">
         <!-- 规则列表 -->
-        <div v-if="rules.length > 0" class="space-y-3">
-            <MockRuleCard
-                v-for="rule in rules"
-                :key="rule.id"
-                :rule="rule"
-                :is-globally-disabled="isGloballyDisabled"
-                @edit="editRule"
-                @delete="deleteRule"
-                @toggle-collapse="toggleRuleCollapse"
-                @toggle-enabled="toggleRuleEnabled"
-            />
+        <div v-if="rules.length > 0">
+            <draggable
+                :list="rules"
+                item-key="id"
+                handle=".drag-handle"
+                ghost-class="ghost"
+                chosen-class="chosen"
+                drag-class="drag"
+                animation="200"
+                @end="handleReorder"
+            >
+                <template #item="{element: rule}">
+                    <div class="rule-item space-y-3">
+                        <!-- 拖拽手柄 -->
+                        <div class="drag-handle" title="拖拽排序">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <circle cx="4" cy="4" r="1.5" />
+                                <circle cx="12" cy="4" r="1.5" />
+                                <circle cx="4" cy="8" r="1.5" />
+                                <circle cx="12" cy="8" r="1.5" />
+                                <circle cx="4" cy="12" r="1.5" />
+                                <circle cx="12" cy="12" r="1.5" />
+                            </svg>
+                        </div>
+
+                        <div class="rule-card-wrapper">
+                            <MockRuleCard
+                                :rule="rule"
+                                :is-globally-disabled="isGloballyDisabled"
+                                @edit="editRule"
+                                @delete="deleteRule"
+                                @toggle-collapse="toggleRuleCollapse"
+                                @toggle-enabled="toggleRuleEnabled"
+                            />
+                        </div>
+                    </div>
+                </template>
+            </draggable>
         </div>
 
         <!-- 空状态 -->
@@ -78,5 +112,65 @@ function toggleRuleEnabled(ruleId: string, enabled: boolean) {
 <style scoped>
 .rule-list {
     min-height: 200px;
+}
+
+.rule-item {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 12px;
+}
+
+.rule-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    color: #c0c4cc;
+    cursor: grab;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    margin-top: 12px;
+    flex-shrink: 0;
+}
+
+.drag-handle:hover {
+    color: #909399;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+    color: #606266;
+}
+
+.rule-card-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+/* vuedraggable 样式 */
+.ghost {
+    opacity: 0.5;
+    background: rgba(64, 158, 255, 0.1);
+    border: 2px dashed #409eff;
+}
+
+.chosen {
+    transform: rotate(2deg);
+}
+
+.drag {
+    opacity: 0.8;
+    transform: scale(1.05);
 }
 </style>

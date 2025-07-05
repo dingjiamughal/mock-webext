@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {ref, computed, nextTick, watch, PropType} from 'vue';
-import {Delete} from '@element-plus/icons-vue';
-import {createMonacoEditorManager, MonacoEditorManager} from './monacoEditor';
+import {ElMessage} from 'element-plus';
 import Mock from 'mockjs';
+import {computed, nextTick, PropType, ref, watch} from 'vue';
+import {createMonacoEditorManager, MonacoEditorManager} from './monacoEditor';
 
 interface MockRule {
     id: string;
@@ -105,11 +105,11 @@ async function formatJSON() {
         } catch (error) {
             console.error('格式化失败:', error);
             const errorMessage = error instanceof Error ? error.message : '未知错误';
-            alert('格式化失败：' + errorMessage);
+            ElMessage.error('格式化失败：' + errorMessage);
         }
     } else {
         console.warn('编辑器未初始化，无法格式化');
-        alert('编辑器未初始化，请稍后再试');
+        ElMessage.warning('编辑器未初始化，请稍后再试');
     }
 }
 
@@ -135,7 +135,7 @@ function previewMockData() {
             `);
         }
     } catch (error) {
-        alert('预览失败：' + error);
+        ElMessage.error('预览失败：' + error);
     }
 }
 
@@ -166,7 +166,7 @@ function handleClose() {
 // 保存规则
 function saveRule() {
     if (!formData.value.url) {
-        alert('请输入URL');
+        ElMessage.warning('请输入URL');
         return;
     }
 
@@ -199,9 +199,9 @@ function saveRule() {
 
         emit('save', newRule);
         closeForm();
-        alert(isEditing.value ? '规则更新成功！' : '规则添加成功！');
+        ElMessage.success(isEditing.value ? '规则更新成功！' : '规则添加成功！');
     } catch (error) {
-        alert('保存失败：' + error);
+        ElMessage.error('保存失败：' + error);
     }
 }
 

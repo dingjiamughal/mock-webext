@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import {ArrowDown, ArrowUp} from '@element-plus/icons-vue';
+import {ref, computed} from 'vue';
+import {ArrowDown, ArrowUp, View} from '@element-plus/icons-vue';
+import {ElMessageBox} from 'element-plus';
+import Mock from 'mockjs';
 
 interface MockRule {
     id: string;
@@ -29,17 +32,19 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
+// 控制详情弹窗显示
+const showDetailDialog = ref(false);
+
 // 获取HTTP方法对应的标签类型
-function getMethodTagType(method: string) {
-    const typeMap: Record<string, string> = {
+function getMethodTagType(method: string): 'success' | 'primary' | 'warning' | 'danger' | 'info' {
+    const methodMap: Record<string, 'success' | 'primary' | 'warning' | 'danger' | 'info'> = {
         GET: 'success',
         POST: 'primary',
         PUT: 'warning',
         DELETE: 'danger',
-        PATCH: 'info',
-        ALL: ''
+        PATCH: 'info'
     };
-    return typeMap[method] || '';
+    return methodMap[method] || 'info';
 }
 
 // 获取状态码对应的标签类型
@@ -76,10 +81,54 @@ function editRule() {
 
 // 删除规则
 function deleteRule() {
-    if (confirm('确定要删除这个规则吗？')) {
-        emit('delete', props.rule.id);
-    }
+    ElMessageBox.confirm('确定要删除这个规则吗？', '删除确认', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+    })
+        .then(() => {
+            emit('delete', props.rule.id);
+        })
+        .catch(() => {
+            // 用户取消删除
+        });
 }
+
+// 显示详情弹窗
+function showDetail() {
+    showDetailDialog.value = true;
+}
+
+// 解析 MockJS 内容
+const parsedMockData = computed(() => {
+    try {
+        if (typeof props.rule.response === 'string') {
+            // 尝试解析 JSON 字符串
+            const parsed = JSON.parse(props.rule.response);
+            // 使用 MockJS 生成示例数据
+            const mockResult = Mock.mock(parsed);
+            return {
+                template: JSON.stringify(parsed, null, 2),
+                example: JSON.stringify(mockResult, null, 2),
+                hasMockSyntax: JSON.stringify(parsed).includes('@')
+            };
+        } else {
+            // 直接使用对象
+            const mockResult = Mock.mock(props.rule.response);
+            return {
+                template: JSON.stringify(props.rule.response, null, 2),
+                example: JSON.stringify(mockResult, null, 2),
+                hasMockSyntax: JSON.stringify(props.rule.response).includes('@')
+            };
+        }
+    } catch (error) {
+        return {
+            template: formatResponseData(props.rule.response),
+            example: '解析失败',
+            hasMockSyntax: false
+        };
+    }
+});
 
 // 切换启用状态
 function toggleEnabled(enabled: boolean) {
@@ -126,7 +175,7 @@ function toggleEnabled(enabled: boolean) {
                     <el-switch
                         size="small"
                         :model-value="rule.enabled"
-                        @update:model-value="toggleEnabled"
+                        @update:model-value="(val: string | number | boolean) => toggleEnabled(!!val)"
                         :disabled="isGloballyDisabled"
                     />
                 </el-space>
@@ -136,14 +185,57 @@ function toggleEnabled(enabled: boolean) {
         <transition name="card-content" appear>
             <div v-show="!rule.collapsed" class="space-y-2">
                 <!-- 响应数据预览 -->
-                <div class="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                    <pre class="font-mono max-h-[160px] overflow-y-auto whitespace-pre-wrap break-words">{{
+                <div class="relative text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                    <!-- 详情按钮 -->
+                    <el-button type="info" size="small" @click="showDetail" class="absolute top-2 right-2 z-10" circle>
+                        <el-icon><View /></el-icon>
+                    </el-button>
+                    <pre class="font-mono max-h-[160px] overflow-y-auto whitespace-pre-wrap break-words pr-12">{{
                         formatResponseData(rule.response)
                     }}</pre>
                 </div>
             </div>
         </transition>
     </el-card>
+
+    <!-- 详情弹窗 -->
+    <el-dialog
+        v-model="showDetailDialog"
+        :title="`规则详情 - ${rule.method} ${rule.url}`"
+        width="80%"
+        :before-close="() => (showDetailDialog = false)"
+    >
+        <div>
+            <!-- 响应数据 -->
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="text-lg font-medium">响应数据</h4>
+                </div>
+
+                <el-input
+                    type="textarea"
+                    :model-value="parsedMockData.example"
+                    :rows="15"
+                    readonly
+                    class="font-mono text-sm"
+                    resize="none"
+                    placeholder="响应数据"
+                />
+            </div>
+        </div>
+
+        <template #footer>
+            <el-button @click="showDetailDialog = false">关闭</el-button>
+            <el-button
+                type="primary"
+                @click="
+                    editRule;
+                    showDetailDialog = false;
+                "
+                >编辑规则</el-button
+            >
+        </template>
+    </el-dialog>
 </template>
 
 <style scoped>
