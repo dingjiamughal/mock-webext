@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>API Mock 插件测试页面</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                line-height: 1.6;
+            }
+            .container {
+                background: #f5f5f5;
+                padding: 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+            }
+            button {
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 4px;
+                cursor: pointer;
+                margin: 5px;
+                font-size: 14px;
+            }
+            button:hover {
+                background: #0056b3;
+            }
+            .result {
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 15px;
+                margin: 10px 0;
+                white-space: pre-wrap;
+                font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                font-size: 12px;
+                max-height: 300px;
+                overflow-y: auto;
+            }
+            .success {
+                border-left: 4px solid #28a745;
+                background-color: #d4edda;
+            }
+            .error {
+                border-left: 4px solid #dc3545;
+                background-color: #f8d7da;
+            }
+            .info {
+                background: #e3f2fd;
+                border: 1px solid #2196f3;
+                padding: 15px;
+                border-radius: 4px;
+                margin: 20px 0;
+            }
+            .step {
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 15px;
+                margin: 10px 0;
+            }
+            .step h3 {
+                margin-top: 0;
+                color: #333;
+            }
+            code {
+                background: #f1f1f1;
+                padding: 2px 4px;
+                border-radius: 3px;
+                font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            }
+        </style>
+        <!-- 引入 Axios CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    </head>
+    <body>
+        <h1>🚀 API Mock 插件测试页面</h1>
+
+        <div class="info">
+            <h3>📋 测试说明</h3>
+            <p>这个页面用于测试Chrome API Mock插件的功能。请按照以下步骤进行测试：</p>
+        </div>
+
+        <div class="step">
+            <h3>步骤 1: 安装并启用插件</h3>
+            <p>1. 确保已经安装了API Mock插件</p>
+            <p>2. 点击浏览器工具栏中的插件图标，确保开关处于"ON"状态</p>
+        </div>
+
+        <div class="step">
+            <h3>步骤 2: 添加测试用的Mock规则</h3>
+            <p>在插件弹窗中添加以下Mock规则来测试真实的开源API：</p>
+
+            <h4>📋 规则1: JSONPlaceholder GET请求</h4>
+            <ul>
+                <li><strong>接口URL:</strong> <code>jsonplaceholder.typicode.com/posts/1</code></li>
+                <li><strong>HTTP方法:</strong> GET</li>
+                <li><strong>匹配方式:</strong> 包含</li>
+                <li><strong>状态码:</strong> 200</li>
+                <li><strong>Mock响应数据:</strong></li>
+            </ul>
+            <div class="result">
+                { "id": 1, "title": "这是Mock的文章标题", "body": "这是来自Mock插件的文章内容，替代了真实API的返回值",
+                "userId": 1, "mockData": true, "timestamp": "2024-01-01 12:00:00" }
+            </div>
+
+            <h4>📋 规则2: JSONPlaceholder POST请求</h4>
+            <ul>
+                <li><strong>接口URL:</strong> <code>jsonplaceholder.typicode.com/posts</code></li>
+                <li><strong>HTTP方法:</strong> POST</li>
+                <li><strong>匹配方式:</strong> 包含</li>
+                <li><strong>状态码:</strong> 201</li>
+                <li><strong>Mock响应数据:</strong></li>
+            </ul>
+            <div class="result">
+                { "id": 101, "title": "Mock创建的新文章", "body": "这是通过Mock插件创建的文章内容", "userId": 1,
+                "created": true, "mockResponse": true }
+            </div>
+
+            <h4>📋 规则3: 本地测试接口</h4>
+            <ul>
+                <li><strong>接口URL:</strong> <code>/api/test</code></li>
+                <li><strong>HTTP方法:</strong> GET</li>
+                <li><strong>匹配方式:</strong> 包含</li>
+                <li><strong>状态码:</strong> 200</li>
+                <li><strong>Mock响应数据:</strong></li>
+            </ul>
+            <div class="result">
+                { "code": 200, "message": "这是来自Mock插件的测试数据", "data": { "userId": 12345, "userName":
+                "测试用户", "timestamp": "2024-01-01 12:00:00", "mockSuccess": true } }
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>步骤 3: 执行测试</h3>
+            <p>点击下面的按钮来测试不同类型的网络请求：</p>
+
+            <div class="container">
+                <h4>🌐 真实开源API测试 (JSONPlaceholder)</h4>
+                <button onclick="testRealAPIGet()">测试真实GET请求 (会被Mock)</button>
+                <button onclick="testRealAPIPost()">测试真实POST请求 (会被Mock)</button>
+                <button onclick="testRealAPIWithoutMock()">测试真实API (不Mock)</button>
+                <div id="realApiResult" class="result"></div>
+            </div>
+
+            <div class="container">
+                <h4>📡 Fetch API 测试</h4>
+                <button onclick="testFetch()">测试本地 Fetch GET 请求</button>
+                <button onclick="testFetchWithDelay()">测试带延迟的 Fetch GET 请求</button>
+                <button onclick="testFetchPost()">测试本地 Fetch POST 请求</button>
+                <div id="fetchResult" class="result"></div>
+            </div>
+
+            <div class="container">
+                <h4>🔄 XMLHttpRequest 测试</h4>
+                <button onclick="testXHR()">测试本地 XHR 请求</button>
+                <button onclick="testXHRPost()">测试本地 XHR POST 请求</button>
+                <div id="xhrResult" class="result"></div>
+            </div>
+
+            <div class="container">
+                <h4>📮 POST 请求测试</h4>
+                <button onclick="testPostRequest()">测试 POST 请求</button>
+                <div id="postResult" class="result"></div>
+            </div>
+
+            <div class="container">
+                <h4>🔄 PUT 请求测试</h4>
+                <button onclick="testPutRequest()">测试 PUT 请求</button>
+                <div id="putResult" class="result"></div>
+            </div>
+
+            <div class="container">
+                <h4>🗑️ DELETE 请求测试</h4>
+                <button onclick="testDeleteRequest()">测试 DELETE 请求</button>
+                <div id="deleteResult" class="result"></div>
+            </div>
+
+            <div class="container">
+                <h4>📦 Axios 测试</h4>
+                <button onclick="testAxiosGet()">测试 Axios GET 请求</button>
+                <button onclick="testAxiosPost()">测试 Axios POST 请求</button>
+                <button onclick="testAxiosRealAPI()">测试 Axios 真实API (会被Mock)</button>
+                <div id="axiosResult" class="result"></div>
+            </div>
+
+            <div class="container">
+                <h4>❌ 错误处理测试</h4>
+                <button onclick="testNonMockedAPI()">测试未Mock的接口</button>
+                <div id="errorResult" class="result"></div>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>步骤 4: 查看结果</h3>
+            <p>1. 检查上面的测试结果是否显示了Mock数据</p>
+            <p>2. 打开浏览器开发者工具的Console面板，查看是否有 <code>[API Mock]</code> 开头的日志</p>
+            <p>3. 如果看到Mock数据和相关日志，说明插件工作正常</p>
+        </div>
+
+        <script>
+            // 测试真实开源API - GET请求
+            async function testRealAPIGet() {
+                const resultDiv = document.getElementById('realApiResult');
+                resultDiv.textContent = '正在请求真实API (JSONPlaceholder)...';
+                resultDiv.className = 'result';
+
+                try {
+                    const response = await fetch('https://jsonplaceholder.typicode.com/posts/1');
+                    const data = await response.json();
+
+                    if (data.mockData) {
+                        resultDiv.textContent = `✅ GET请求被Mock成功！\n\n这是Mock的响应数据：\n${JSON.stringify(
+                            data,
+                            null,
+                            2
+                        )}`;
+                        resultDiv.className = 'result success';
+                    } else {
+                        resultDiv.textContent = `⚠️ GET请求返回了真实数据，可能Mock规则未生效：\n\n${JSON.stringify(
+                            data,
+                            null,
+                            2
+                        )}`;
+                        resultDiv.className = 'result';
+                    }
+                } catch (error) {
+                    resultDiv.textContent = `❌ GET请求失败：\n${error.message}`;
+                    resultDiv.className = 'result error';
+                }
+            }
+
+            // 测试真实开源API - POST请求
+            async function testRealAPIPost() {
+                const resultDiv = document.getElementById('realApiResult');
+                resultDiv.textContent = '正在发送POST请求到真实API...';
+                resultDiv.className = 'result';
+
+                try {
+                    const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            title: '测试文章',
+                            body: '这是测试内容',
+                            userId: 1
+                        })
+                    });
+                    const data = await response.json();
+
+                    if (data.mockResponse) {
+                        resultDiv.textContent = `✅ POST请求被Mock成功！\n\n这是Mock的响应数据：\n${JSON.stringify(
+                            data,
+                            null,
+                            2
+                        )}`;
+                        resultDiv.className = 'result success';
+                    } else {
+                        resultDiv.textContent = `⚠️ POST请求返回了真实数据，可能Mock规则未生效：\n\n${JSON.stringify(
+                            data,
+                            null,
+                            2
+                        )}`;
+                        resultDiv.className = 'result';
+                    }
+                } catch (error) {
+                    resultDiv.textContent = `❌ POST请求失败：\n${error.message}`;
+                    resultDiv.className = 'result error';
+                }
+            }
+
+            // 测试真实API (不使用Mock)
+            async function testRealAPIWithoutMock() {
+                const resultDiv = document.getElementById('realApiResult');
+                resultDiv.textContent = '正在请求真实API (应该返回真实数据)...';
+                resultDiv.className = 'result';
+
+                try {
+                    const response = await fetch('https://jsonplaceholder.typicode.com/users/1');
+                    const data = await response.json();
+
+                    resultDiv.textContent = `✅ 真实API请求成功！\n\n真实响应数据：\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } catch (error) {
+                    resultDiv.textContent = `❌ 真实API请求失败：\n${error.message}`;
+                    resultDiv.className = 'result error';
+                }
+            }
+
+            // 测试 Fetch API
+            async function testFetch() {
+                const resultDiv = document.getElementById('fetchResult');
+                resultDiv.textContent = '正在请求...';
+                resultDiv.className = 'result';
+
+                try {
+                    const response = await fetch('/api/test');
+                    const data = await response.json();
+
+                    resultDiv.textContent = `✅ Fetch 请求成功！\n\n响应数据：\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } catch (error) {
+                    resultDiv.textContent = `❌ Fetch 请求失败：\n${error.message}`;
+                    resultDiv.className = 'result error';
+                }
+            }
+
+            // 测试 Fetch POST 请求
+            async function testFetchPost() {
+                const resultDiv = document.getElementById('fetchResult');
+                resultDiv.textContent = '发送Fetch POST请求中...';
+                resultDiv.className = 'result';
+
+                try {
+                    const response = await fetch('/api/test', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            title: '新文章',
+                            content: '这是POST请求的内容'
+                        })
+                    });
+                    const data = await response.json();
+
+                    resultDiv.textContent = `✅ Fetch POST请求成功！\n\n响应数据：\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } catch (error) {
+                    resultDiv.textContent = `❌ Fetch POST请求失败：\n${error.message}`;
+                    resultDiv.className = 'result error';
+                }
+            }
+
+            // 测试带延迟的 Fetch
+            async function testFetchWithDelay() {
+                const resultDiv = document.getElementById('fetchResult');
+                resultDiv.textContent = '正在请求（可能有延迟）...';
+                resultDiv.className = 'result';
+
+                const startTime = Date.now();
+
+                try {
+                    const response = await fetch('/api/test?delay=true');
+                    const data = await response.json();
+                    const endTime = Date.now();
+                    const duration = endTime - startTime;
+
+                    resultDiv.textContent = `✅ Fetch 请求成功！\n请求耗时：${duration}ms\n\n响应数据：\n${JSON.stringify(
+                        data,
+                        null,
+                        2
+                    )}`;
+                    resultDiv.className = 'result success';
+                } catch (error) {
+                    resultDiv.textContent = `❌ Fetch 请求失败：\n${error.message}`;
+                    resultDiv.className = 'result error';
+                }
+            }
+
+            // 测试 XMLHttpRequest
+            function testXHR() {
+                const resultDiv = document.getElementById('xhrResult');
+                resultDiv.textContent = '正在请求...';
+                resultDiv.className = 'result';
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', '/api/test');
+
+                xhr.onload = function () {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        resultDiv.textContent = `✅ XHR 请求成功！\n状态码：${
+                            xhr.status
+                        }\n\n响应数据：\n${JSON.stringify(data, null, 2)}`;
+                        resultDiv.className = 'result success';
+                    } catch (error) {
+                        resultDiv.textContent = `❌ 解析响应失败：\n${error.message}\n\n原始响应：\n${xhr.responseText}`;
+                        resultDiv.className = 'result error';
+                    }
+                };
+
+                xhr.onerror = function () {
+                    resultDiv.textContent = `❌ XHR 请求失败`;
+                    resultDiv.className = 'result error';
+                };
+
+                xhr.send();
+            }
+
+            // 测试 XHR POST 请求
+            function testXHRPost() {
+                const resultDiv = document.getElementById('xhrResult');
+                resultDiv.textContent = '正在发送POST请求...';
+                resultDiv.className = 'result';
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', 'https://jsonplaceholder.typicode.com/posts');
+                xhr.setRequestHeader('Content-Type', 'application/json');
+
+                xhr.onload = function () {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        resultDiv.textContent = `✅ XHR POST 请求成功！\n状态码：${
+                            xhr.status
+                        }\n\n响应数据：\n${JSON.stringify(data, null, 2)}`;
+                        resultDiv.className = 'result success';
+                    } catch (error) {
+                        resultDiv.textContent = `❌ 解析响应失败：\n${error.message}\n\n原始响应：\n${xhr.responseText}`;
+                        resultDiv.className = 'result error';
+                    }
+                };
+
+                xhr.onerror = function () {
+                    resultDiv.textContent = `❌ XHR POST 请求失败`;
+                    resultDiv.className = 'result error';
+                };
+
+                const postData = {
+                    test: true,
+                    message: '这是POST请求的测试数据'
+                };
+
+                xhr.send(JSON.stringify(postData));
+            }
+
+            // 测试未Mock的接口
+            async function testNonMockedAPI() {
+                const resultDiv = document.getElementById('errorResult');
+                resultDiv.textContent = '正在请求未Mock的接口...';
+                resultDiv.className = 'result';
+
+                try {
+                    const response = await fetch('/api/not-mocked');
+
+                    if (response.ok) {
+                        const data = await response.text();
+                        resultDiv.textContent = `⚠️ 请求成功，但这不应该被Mock：\n${data}`;
+                        resultDiv.className = 'result';
+                    } else {
+                        resultDiv.textContent = `✅ 正确行为：未Mock的接口返回了错误状态\n状态码：${response.status}\n状态文本：${response.statusText}`;
+                        resultDiv.className = 'result success';
+                    }
+                } catch (error) {
+                    resultDiv.textContent = `✅ 正确行为：未Mock的接口请求失败\n错误信息：${error.message}`;
+                    resultDiv.className = 'result success';
+                }
+            }
+
+            // 测试 POST 请求
+            async function testPostRequest() {
+                const resultDiv = document.getElementById('postResult');
+                resultDiv.textContent = '发送POST请求中...';
+                resultDiv.className = 'result';
+
+                try {
+                    const response = await fetch('/api/test', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            name: '测试用户',
+                            email: 'test@example.com'
+                        })
+                    });
+                    const data = await response.json();
+
+                    resultDiv.textContent = `✅ POST请求成功！\n\n响应数据：\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } catch (error) {
+                    resultDiv.textContent = `❌ POST请求失败：\n${error.message}`;
+                    resultDiv.className = 'result error';
+                }
+            }
+
+            // 测试 PUT 请求
+            async function testPutRequest() {
+                const resultDiv = document.getElementById('putResult');
+                resultDiv.textContent = '发送PUT请求中...';
+                resultDiv.className = 'result';
+
+                try {
+                    const response = await fetch('/api/test/1', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id: 1,
+                            name: '更新的用户',
+                            email: 'updated@example.com'
+                        })
+                    });
+                    const data = await response.json();
+
+                    resultDiv.textContent = `✅ PUT请求成功！\n\n响应数据：\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } catch (error) {
+                    resultDiv.textContent = `❌ PUT请求失败：\n${error.message}`;
+                    resultDiv.className = 'result error';
+                }
+            }
+
+            // 测试 DELETE 请求
+            async function testDeleteRequest() {
+                const resultDiv = document.getElementById('deleteResult');
+                resultDiv.textContent = '发送DELETE请求中...';
+                resultDiv.className = 'result';
+
+                try {
+                    const response = await fetch('/api/test/1', {
+                        method: 'DELETE'
+                    });
+                    const data = await response.json();
+
+                    resultDiv.textContent = `✅ DELETE请求成功！\n\n响应数据：\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } catch (error) {
+                    resultDiv.textContent = `❌ DELETE请求失败：\n${error.message}`;
+                    resultDiv.className = 'result error';
+                }
+            }
+
+            // 测试 Axios GET 请求
+            async function testAxiosGet() {
+                const resultDiv = document.getElementById('axiosResult');
+                resultDiv.textContent = '正在使用Axios发送GET请求...';
+                resultDiv.className = 'result';
+
+                try {
+                    const response = await axios.get('/api/test');
+                    const data = response.data;
+
+                    resultDiv.textContent = `✅ Axios GET请求成功！\n状态码：${
+                        response.status
+                    }\n\n响应数据：\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } catch (error) {
+                    resultDiv.textContent = `❌ Axios GET请求失败：\n${error.message}\n\n错误详情：\n${
+                        error.response ? JSON.stringify(error.response.data, null, 2) : '无响应数据'
+                    }`;
+                    resultDiv.className = 'result error';
+                }
+            }
+
+            // 测试 Axios POST 请求
+            async function testAxiosPost() {
+                const resultDiv = document.getElementById('axiosResult');
+                resultDiv.textContent = '正在使用Axios发送POST请求...';
+                resultDiv.className = 'result';
+
+                try {
+                    const postData = {
+                        title: '测试文章',
+                        body: '这是测试内容',
+                        userId: 1
+                    };
+
+                    const response = await axios.post('https://jsonplaceholder.typicode.com/posts', postData, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    const data = response.data;
+
+                    resultDiv.textContent = `✅ Axios POST请求成功！\n状态码：${
+                        response.status
+                    }\n\n发送的数据：\n${JSON.stringify(postData, null, 2)}\n\n响应数据：\n${JSON.stringify(
+                        data,
+                        null,
+                        2
+                    )}`;
+                    resultDiv.className = 'result success';
+                } catch (error) {
+                    resultDiv.textContent = `❌ Axios POST请求失败：\n${error.message}\n\n错误详情：\n${
+                        error.response ? JSON.stringify(error.response.data, null, 2) : '无响应数据'
+                    }`;
+                    resultDiv.className = 'result error';
+                }
+            }
+
+            // 测试 Axios 真实API (会被Mock)
+            async function testAxiosRealAPI() {
+                const resultDiv = document.getElementById('axiosResult');
+                resultDiv.textContent = '正在使用Axios请求真实API (JSONPlaceholder)...';
+                resultDiv.className = 'result';
+
+                try {
+                    console.log(12323);
+                    const response = await axios.get('https://jsonplaceholder.typicode.com/posts');
+                    console.log(response, 'response');
+                    const data = response.data;
+                    console.log(data, 'aassdd');
+
+                    if (data.mockData) {
+                        resultDiv.textContent = `✅ Axios请求被Mock成功！\n状态码：${
+                            response.status
+                        }\n\n这是Mock的响应数据：\n${JSON.stringify(data, null, 2)}`;
+                        resultDiv.className = 'result success';
+                    } else {
+                        resultDiv.textContent = `⚠️ Axios请求返回了真实数据，可能Mock规则未生效：\n状态码：${
+                            response.status
+                        }\n\n${JSON.stringify(data, null, 2)}`;
+                        resultDiv.className = 'result';
+                    }
+                } catch (error) {
+                    resultDiv.textContent = `❌ Axios请求失败：\n${error.message}\n\n错误详情：\n${
+                        error.response ? JSON.stringify(error.response.data, null, 2) : '无响应数据'
+                    }`;
+                    resultDiv.className = 'result error';
+                }
+            }
+
+            // 页面加载完成后的提示
+            window.addEventListener('load', function () {
+                console.log('🧪 API Mock 测试页面已加载');
+                console.log('📝 请按照页面上的步骤进行测试');
+                console.log('🔍 注意观察Console中是否出现 [API Mock] 开头的日志');
+                console.log('🌐 本页面包含真实开源API测试，可以验证Mock功能的实际效果');
+                console.log('📡 JSONPlaceholder API: https://jsonplaceholder.typicode.com/');
+                testAxiosRealAPI();
+            });
+        </script>
+    </body>
+</html>

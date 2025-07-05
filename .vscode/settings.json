@@ -1,0 +1,9 @@
+{
+    "cSpell.words": ["Vitesse"],
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "vite.autoStart": false,
+    "files.associations": {
+        "*.css": "postcss"
+    },
+    "liveServer.settings.port": 5501
+}
