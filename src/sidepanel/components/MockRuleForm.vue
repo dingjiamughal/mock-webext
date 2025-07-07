@@ -37,7 +37,6 @@ const emit = defineEmits<Emits>();
 
 const editorContainer = ref<HTMLElement | null>(null);
 let editorManager: MonacoEditorManager | null = null;
-console.log('aaaa mockruleform');
 // 表单数据
 const formData = ref<Partial<MockRule>>({
     url: '',
@@ -63,27 +62,22 @@ const dialogVisible = computed({
 // 初始化 Monaco Editor
 async function initMonacoEditor() {
     if (!editorContainer.value) {
-        console.warn('Monaco Editor container not found');
         return;
     }
 
     // 检查容器尺寸
     const containerRect = editorContainer.value.getBoundingClientRect();
-    console.log('Container rect:', containerRect);
 
     if (containerRect.width === 0 || containerRect.height === 0) {
-        console.warn('Container has zero dimensions, retrying in 200ms...');
         setTimeout(() => initMonacoEditor(), 200);
         return;
     }
 
     try {
-        console.log('Initializing Monaco Editor...');
         editorManager = createMonacoEditorManager();
         await editorManager.initEditor(editorContainer.value, formData.value.response || '', (value: string) => {
             formData.value.response = value;
         });
-        console.log('Monaco Editor initialized successfully');
     } catch (error) {
         console.error('Failed to initialize Monaco Editor:', error);
     }
@@ -103,12 +97,10 @@ async function formatJSON() {
         try {
             await editorManager.formatJSON();
         } catch (error) {
-            console.error('格式化失败:', error);
             const errorMessage = error instanceof Error ? error.message : '未知错误';
             ElMessage.error('格式化失败：' + errorMessage);
         }
     } else {
-        console.warn('编辑器未初始化，无法格式化');
         ElMessage.warning('编辑器未初始化，请稍后再试');
     }
 }
@@ -232,9 +224,7 @@ watch(
 watch(
     () => props.visible,
     newVal => {
-        console.log(newVal, 'dddd');
         if (newVal) {
-            console.log('aaaa');
             nextTick(() => {
                 setTimeout(() => {
                     initMonacoEditor();

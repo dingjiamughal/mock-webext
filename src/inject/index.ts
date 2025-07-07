@@ -40,35 +40,27 @@ function getMockRules(): Promise<MockData> {
 
                 // 验证数据结构
                 const data = event.data.data;
-                console.log('[Mock] Received data from background:', data);
 
                 if (data && typeof data === 'object') {
                     // 现在background直接返回数组，不需要解析字符串
                     let parsedMockRules = [];
                     if (Array.isArray(data.mockRules)) {
                         parsedMockRules = data.mockRules;
-                        console.log('[Mock] Using array mockRules directly:', parsedMockRules);
                     } else if (typeof data.mockRules === 'string') {
                         // 兼容旧格式，以防万一
                         try {
                             parsedMockRules = JSON.parse(data.mockRules);
-                            console.log('[Mock] Parsed mockRules from string:', parsedMockRules);
                         } catch (error) {
-                            console.warn('[Mock] Failed to parse mockRules string:', error);
                             parsedMockRules = [];
                         }
-                    } else {
-                        console.warn('[Mock] Unexpected mockRules format:', typeof data.mockRules, data.mockRules);
                     }
 
                     const result = {
                         mockRules: parsedMockRules,
                         isEnabled: Boolean(data.isEnabled)
                     };
-                    console.log('[Mock] Resolving with data:', result);
                     resolve(result);
                 } else {
-                    console.warn('[Mock] Invalid data received:', data);
                     resolve({mockRules: [], isEnabled: false});
                 }
             }
@@ -79,7 +71,6 @@ function getMockRules(): Promise<MockData> {
         // 超时处理
         setTimeout(() => {
             window.removeEventListener('message', handleResponse);
-            console.warn('[Mock] Timeout getting mock rules');
             resolve({mockRules: [], isEnabled: false});
         }, 1000);
     });
@@ -87,75 +78,51 @@ function getMockRules(): Promise<MockData> {
 
 // 匹配URL的函数
 function matchUrl(url: string, pattern: string, matchType: 'contains' | 'exact' | 'regex'): boolean {
-    try {
-        switch (matchType) {
-            case 'exact':
-                return url === pattern;
-            case 'contains':
-                return url.includes(pattern);
-            case 'regex':
-                const regex = new RegExp(pattern);
-                return regex.test(url);
-            default:
-                return false;
-        }
-    } catch (error) {
-        console.error('URL matching error:', error);
-        return false;
+    switch (matchType) {
+        case 'exact':
+            return url === pattern;
+        case 'contains':
+            return url.includes(pattern);
+        case 'regex':
+            const regex = new RegExp(pattern);
+            return regex.test(url);
+        default:
+            return false;
     }
 }
 
 // 查找匹配的Mock规则
 function findMatchingRule(url: string, method: string): MockRule | null {
-    console.log(`[Mock] Checking for rules - URL: ${url}, Method: ${method}`);
-    console.log(`[Mock] Current mockData:`, mockData);
-
     // 如果Mock功能未启用，直接返回null
     if (!mockData.isEnabled) {
-        console.log(`[Mock] Mock is disabled globally`);
         return null;
     }
 
     // 确保mockRules是数组
     if (!mockData.mockRules || !Array.isArray(mockData.mockRules)) {
-        console.log(`[Mock] No valid mockRules array:`, mockData.mockRules);
         return null;
     }
 
-    console.log(`[Mock] Found ${mockData.mockRules.length} rules to check`);
-
     // 如果还在初始化中且没有规则，记录日志但不阻止拦截
     if (!isInitialized && mockData.mockRules.length === 0) {
-        console.log(`[Mock] Still initializing, no rules available yet for ${method} ${url}`);
         return null;
     }
 
     const matchingRule =
         mockData.mockRules.find(rule => {
-            console.log(`[Mock] Checking rule:`, rule);
-
             if (!rule.enabled) {
-                console.log(`[Mock] Rule disabled: ${rule.id}`);
                 return false;
             }
 
             // 检查HTTP方法
             if (rule.method !== 'ALL' && rule.method.toLowerCase() !== method.toLowerCase()) {
-                console.log(`[Mock] Method mismatch - Rule: ${rule.method}, Request: ${method}`);
                 return false;
             }
 
             // 检查URL匹配
             const urlMatches = matchUrl(url, rule.url, rule.matchType);
-            console.log(`[Mock] URL match result for rule ${rule.id}: ${urlMatches}`);
             return urlMatches;
         }) || null;
-
-    if (matchingRule) {
-        console.log(`[Mock] Found matching rule:`, matchingRule);
-    } else {
-        console.log(`[Mock] No matching rule found for ${method} ${url}`);
-    }
 
     return matchingRule;
 }
@@ -183,7 +150,6 @@ function createMockResponse(rule: MockRule): Promise<Response> {
                 }
             } catch (error) {
                 // 如果解析失败或MockJS处理失败，使用原始数据
-                console.warn('[Mock] Failed to process MockJS template:', error);
                 processedResponse = rule.response;
             }
 
@@ -242,8 +208,6 @@ window.fetch = async function (input: RequestInfo | URL, init?: RequestInit): Pr
     const matchingRule = findMatchingRule(url, method);
 
     if (matchingRule) {
-        console.log(`[Mock] Intercepted ${method} ${url} with rule:`, matchingRule);
-
         // 发送消息通知content script
         window.postMessage(
             {
@@ -293,8 +257,6 @@ XMLHttpRequest.prototype.send = function (data?: Document | XMLHttpRequestBodyIn
     const matchingRule = findMatchingRule(url, method);
 
     if (matchingRule) {
-        console.log(`[Mock] Intercepted XMLHttpRequest ${method} ${url} with rule:`, matchingRule);
-
         // 发送消息通知content script
         window.postMessage(
             {
@@ -326,7 +288,6 @@ XMLHttpRequest.prototype.send = function (data?: Document | XMLHttpRequestBodyIn
                 }
             } catch (error) {
                 // 如果解析失败或MockJS处理失败，使用原始数据
-                console.warn('[Mock] Failed to process MockJS template:', error);
                 processedResponse = matchingRule.response;
             }
 
@@ -440,43 +401,31 @@ XMLHttpRequest.prototype.send = function (data?: Document | XMLHttpRequestBodyIn
 window.addEventListener('message', event => {
     if (event.source === window && event.data.type === 'MOCK_DATA_UPDATED') {
         const newData = event.data.data;
-        console.log('[Mock] Received real-time update:', newData);
 
         if (newData && typeof newData === 'object') {
             // 现在数据应该直接是数组格式
             let parsedMockRules = [];
             if (Array.isArray(newData.mockRules)) {
                 parsedMockRules = newData.mockRules;
-                console.log('[Mock] Using array mockRules from real-time update:', parsedMockRules);
-            } else if (typeof newData.mockRules === 'string') {
+            } else {
                 // 兼容旧格式
                 try {
                     parsedMockRules = JSON.parse(newData.mockRules);
-                    console.log('[Mock] Parsed mockRules from string in real-time update:', parsedMockRules);
                 } catch (error) {
-                    console.warn('[Mock] Failed to parse mockRules string in real-time update:', error);
                     parsedMockRules = [];
                 }
-            } else {
-                console.warn(
-                    '[Mock] Unexpected mockRules format in real-time update:',
-                    typeof newData.mockRules,
-                    newData.mockRules
-                );
             }
 
             mockData = {
                 mockRules: parsedMockRules,
                 isEnabled: Boolean(newData.isEnabled)
             };
-            console.log('[Mock] Data updated in real-time:', mockData);
         }
     }
 });
 
 // 立即开始拦截，异步加载Mock数据
 // 这样可以确保即使在document_start阶段也能拦截到早期请求
-console.log('[Mock] Starting request interception immediately');
 
 // 异步初始化Mock数据
 (async () => {
@@ -486,26 +435,18 @@ console.log('[Mock] Starting request interception immediately');
             mockRules: Array.isArray(initialData.mockRules) ? initialData.mockRules : [],
             isEnabled: Boolean(initialData.isEnabled)
         };
-        console.log('[Mock] Initialized with rules:', mockData);
     } catch (error) {
-        console.error('[Mock] Failed to initialize:', error);
         mockData = {mockRules: [], isEnabled: false};
     }
 
     // 保留定期更新作为备用机制（间隔延长）
     setInterval(async () => {
-        try {
-            const newData = await getMockRules();
-            if (newData && Array.isArray(newData.mockRules)) {
-                mockData = {
-                    mockRules: newData.mockRules,
-                    isEnabled: Boolean(newData.isEnabled)
-                };
-            } else {
-                console.warn('[Mock] Invalid data received during update, keeping current data');
-            }
-        } catch (error) {
-            console.error('[Mock] Failed to update rules:', error);
+        const newData = await getMockRules();
+        if (newData && Array.isArray(newData.mockRules)) {
+            mockData = {
+                mockRules: newData.mockRules,
+                isEnabled: Boolean(newData.isEnabled)
+            };
         }
     }, 30000); // 改为每30秒更新一次作为备用
 })();
@@ -514,7 +455,4 @@ console.log('[Mock] Starting request interception immediately');
 let isInitialized = false;
 setTimeout(() => {
     isInitialized = true;
-    console.log('[Mock] Initialization timeout reached, proceeding with current data');
 }, 100); // 给100ms的初始化时间
-
-console.log('[Mock] Inject script loaded successfully');

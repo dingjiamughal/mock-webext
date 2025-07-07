@@ -65,30 +65,20 @@ export class MonacoEditorManager {
         value: string = '',
         onChange?: (value: string) => void
     ): Promise<monaco.editor.IStandaloneCodeEditor> {
-        console.log('MonacoEditorManager: Starting editor initialization');
-        console.log('Container:', container);
-        console.log('Container dimensions:', container.offsetWidth, 'x', container.offsetHeight);
-
         this.container = container;
 
         let monacoInstance: typeof monaco;
         try {
             // 使用 loader 确保 Monaco Editor 正确加载
-            console.log('MonacoEditorManager: Loading Monaco instance...');
             monacoInstance = await loader.init();
-            console.log('MonacoEditorManager: Monaco instance loaded successfully');
 
             // 配置JSON编辑器主题和样式
-            console.log('MonacoEditorManager: Setting up JSON theme...');
             this.setupJSONTheme();
-            console.log('MonacoEditorManager: JSON theme setup completed');
         } catch (error) {
-            console.error('MonacoEditorManager: Failed to load Monaco or setup theme:', error);
             throw error;
         }
 
         // 创建编辑器实例
-        console.log('MonacoEditorManager: Creating editor instance...');
         try {
             this.editor = monacoInstance.editor.create(container, {
                 value,
@@ -147,9 +137,7 @@ export class MonacoEditorManager {
                 renderWhitespace: 'selection',
                 renderControlCharacters: true
             });
-            console.log('MonacoEditorManager: Editor instance created successfully');
         } catch (error) {
-            console.error('MonacoEditorManager: Failed to create editor instance:', error);
             throw error;
         }
 
@@ -162,7 +150,6 @@ export class MonacoEditorManager {
             });
         }
 
-        console.log('MonacoEditorManager: Editor initialization completed');
         if (!this.editor) {
             throw new Error('Failed to create Monaco Editor instance');
         }
@@ -201,7 +188,6 @@ export class MonacoEditorManager {
                     this.manualFormatJSON();
                 }
             } catch (error) {
-                console.warn('Monaco格式化失败，尝试手动格式化:', error);
                 this.manualFormatJSON();
             }
         }

@@ -239,19 +239,15 @@ const dataLoaded = ref(false);
 
 // 广播数据更新的工具函数
 const broadcastMockData = async (data = combined.value) => {
-    try {
-        await sendMessage(
-            'broadcastMockDataUpdate',
-            {
-                mockRules: JSON.stringify(data.mockRules || []),
-                isEnabled: data.isEnabled
-            },
-            'background'
-        );
-        console.log('[Sidepanel] Broadcasted mock data update:', data);
-    } catch (error) {
-        console.error('[Sidepanel] Failed to broadcast mock data update:', error);
-    }
+    await sendMessage(
+        'broadcastMockDataUpdate',
+        {
+            mockRules: JSON.stringify(data.mockRules || []),
+            isEnabled: data.isEnabled
+        },
+        'background'
+    );
+    console.log('[Sidepanel] Broadcasted mock data update:', data);
 };
 
 // 监听数据变化并广播更新
@@ -275,7 +271,9 @@ onMounted(async () => {
         });
 
         // 确保数据初始化
-        if (!mockRules.value) mockRules.value = [];
+        if (!mockRules.value) {
+            mockRules.value = [];
+        }
 
         // 标记数据加载完成并广播初始数据
         dataLoaded.value = true;
